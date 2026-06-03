@@ -57,9 +57,8 @@ contract ConsensusLayerFeeDispatcher is IFeeDispatcher {
 
     /// @notice Performs a withdrawal on this contract's balance
     function dispatch(bytes32 _publicKeyRoot) external payable {
-        IStakingContractFeeDetails stakingContract = IStakingContractFeeDetails(
-            STAKING_CONTRACT_ADDRESS_SLOT.getAddress()
-        );
+        IStakingContractFeeDetails stakingContract =
+            IStakingContractFeeDetails(STAKING_CONTRACT_ADDRESS_SLOT.getAddress());
 
         uint256 balance = address(this).balance; // this has taken into account msg.value
         if (balance == 0) {
@@ -108,14 +107,7 @@ contract ConsensusLayerFeeDispatcher is IFeeDispatcher {
                 revert FeeRecipientReceiveError(data);
             }
         }
-        emit Withdrawal(
-            withdrawer,
-            operator,
-            _publicKeyRoot,
-            balance - globalFee,
-            operatorFee,
-            globalFee - operatorFee
-        );
+        emit Withdrawal(withdrawer, operator, _publicKeyRoot, balance - globalFee, operatorFee, globalFee - operatorFee);
     }
 
     /// @notice Retrieve the staking contract address
@@ -126,9 +118,8 @@ contract ConsensusLayerFeeDispatcher is IFeeDispatcher {
     /// @notice Retrieve the assigned withdrawer for the given public key root
     /// @param _publicKeyRoot Public key root to get the owner
     function getWithdrawer(bytes32 _publicKeyRoot) external view returns (address) {
-        IStakingContractFeeDetails stakingContract = IStakingContractFeeDetails(
-            STAKING_CONTRACT_ADDRESS_SLOT.getAddress()
-        );
+        IStakingContractFeeDetails stakingContract =
+            IStakingContractFeeDetails(STAKING_CONTRACT_ADDRESS_SLOT.getAddress());
         return stakingContract.getWithdrawerFromPublicKeyRoot(_publicKeyRoot);
     }
 

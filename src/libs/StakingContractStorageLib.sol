@@ -167,11 +167,7 @@ library StakingContractStorageLib {
         vfi.funded = uint32(value >> FUNDED_OFFSET);
     }
 
-    function setValidatorsFundingInfo(
-        uint256 _index,
-        uint32 _availableKeys,
-        uint32 _funded
-    ) internal {
+    function setValidatorsFundingInfo(uint256 _index, uint32 _availableKeys, uint32 _funded) internal {
         UintToUintMappingSlot storage p;
         bytes32 slot = VALIDATORS_FUNDING_INFO_SLOT;
 
@@ -181,9 +177,8 @@ library StakingContractStorageLib {
 
         uint256 slotIndex = _index >> 2; // divide by 4
         uint256 innerIndex = (_index & 3) << 6; // modulo 4, multiply by 64
-        p.value[slotIndex] =
-            (p.value[slotIndex] & (~(uint256(0xFFFFFFFFFFFFFFFF) << innerIndex))) | // clear the bits we want to set
-            ((uint256(_availableKeys) | (uint256(_funded) << FUNDED_OFFSET)) << innerIndex);
+        p.value[slotIndex] = (p.value[slotIndex] & (~(uint256(0xFFFFFFFFFFFFFFFF) << innerIndex))) // clear the bits we want to set
+            | ((uint256(_availableKeys) | (uint256(_funded) << FUNDED_OFFSET)) << innerIndex);
     }
 
     /* ========================================

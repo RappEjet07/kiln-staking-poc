@@ -114,9 +114,8 @@ contract StakingContract {
 
     /// @notice Ensures that the caller is the operator fee recipient
     modifier onlyActiveOperatorFeeRecipient(uint256 _operatorIndex) {
-        StakingContractStorageLib.OperatorInfo storage operatorInfo = StakingContractStorageLib.getOperators().value[
-            _operatorIndex
-        ];
+        StakingContractStorageLib.OperatorInfo storage operatorInfo =
+            StakingContractStorageLib.getOperators().value[_operatorIndex];
 
         if (operatorInfo.deactivated) {
             revert Deactivated();
@@ -248,11 +247,8 @@ contract StakingContract {
         if (StakingContractStorageLib.getOperatorIndexPerValidator().value[pubKeyRoot].enabled == false) {
             revert PublicKeyNotInContract();
         }
-        return
-            StakingContractStorageLib
-                .getOperators()
-                .value[StakingContractStorageLib.getOperatorIndexPerValidator().value[pubKeyRoot].operatorIndex]
-                .feeRecipient;
+        return StakingContractStorageLib.getOperators()
+        .value[StakingContractStorageLib.getOperatorIndexPerValidator().value[pubKeyRoot].operatorIndex].feeRecipient;
     }
 
     /// @notice Retrieve withdrawer of public key
@@ -320,11 +316,12 @@ contract StakingContract {
     {
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
         if (_operatorIndex < operators.value.length) {
-            StakingContractStorageLib.ValidatorsFundingInfo memory _operatorInfo = StakingContractStorageLib
-                .getValidatorsFundingInfo(_operatorIndex);
+            StakingContractStorageLib.ValidatorsFundingInfo memory _operatorInfo =
+                StakingContractStorageLib.getValidatorsFundingInfo(_operatorIndex);
             StakingContractStorageLib.OperatorInfo storage _operator = operators.value[_operatorIndex];
 
-            (operatorAddress, feeRecipientAddress, limit, keys, deactivated) = (
+            (operatorAddress, feeRecipientAddress, limit, keys, deactivated) =
+            (
                 _operator.operator,
                 _operator.feeRecipient,
                 _operator.limit,
@@ -341,12 +338,7 @@ contract StakingContract {
     function getValidator(uint256 _operatorIndex, uint256 _validatorIndex)
         external
         view
-        returns (
-            bytes memory publicKey,
-            bytes memory signature,
-            address withdrawer,
-            bool funded
-        )
+        returns (bytes memory publicKey, bytes memory signature, address withdrawer, bool funded)
     {
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
         publicKey = operators.value[_operatorIndex].publicKeys[_validatorIndex];
@@ -409,11 +401,10 @@ contract StakingContract {
     /// @param _operatorIndex Index of the operator to update
     /// @param _operatorAddress New operator address for operations management
     /// @param _feeRecipientAddress New operator address for reward management
-    function setOperatorAddresses(
-        uint256 _operatorIndex,
-        address _operatorAddress,
-        address _feeRecipientAddress
-    ) external onlyActiveOperatorFeeRecipient(_operatorIndex) {
+    function setOperatorAddresses(uint256 _operatorIndex, address _operatorAddress, address _feeRecipientAddress)
+        external
+        onlyActiveOperatorFeeRecipient(_operatorIndex)
+    {
         _checkAddress(_operatorAddress);
         _checkAddress(_feeRecipientAddress);
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
@@ -452,11 +443,7 @@ contract StakingContract {
     /// @param _operatorIndex Operator Index
     /// @param _limit New staking limit
     /// @param _snapshot Block number at which verification was done
-    function setOperatorLimit(
-        uint256 _operatorIndex,
-        uint256 _limit,
-        uint256 _snapshot
-    ) external onlyAdmin {
+    function setOperatorLimit(uint256 _operatorIndex, uint256 _limit, uint256 _snapshot) external onlyAdmin {
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
         if (operators.value[_operatorIndex].deactivated) {
             revert Deactivated();
@@ -466,8 +453,8 @@ contract StakingContract {
             revert OperatorLimitTooHigh(_limit, publicKeyCount);
         }
         if (
-            operators.value[_operatorIndex].limit < _limit &&
-            StakingContractStorageLib.getLastValidatorEdit() > _snapshot
+            operators.value[_operatorIndex].limit < _limit
+                && StakingContractStorageLib.getLastValidatorEdit() > _snapshot
         ) {
             revert LastEditAfterSnapshot();
         }
@@ -546,10 +533,10 @@ contract StakingContract {
         }
 
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
-        StakingContractStorageLib.OperatorIndexPerValidatorSlot
-            storage operatorIndexPerValidator = StakingContractStorageLib.getOperatorIndexPerValidator();
+        StakingContractStorageLib.OperatorIndexPerValidatorSlot storage operatorIndexPerValidator =
+            StakingContractStorageLib.getOperatorIndexPerValidator();
 
-        for (uint256 i; i < _keyCount; ) {
+        for (uint256 i; i < _keyCount;) {
             bytes memory publicKey = BytesLib.slice(_publicKeys, i * PUBLIC_KEY_LENGTH, PUBLIC_KEY_LENGTH);
             bytes memory signature = BytesLib.slice(_signatures, i * SIGNATURE_LENGTH, SIGNATURE_LENGTH);
 
@@ -562,10 +549,8 @@ contract StakingContract {
                 revert DuplicateValidatorKey(publicKey);
             }
 
-            operatorIndexPerValidator.value[pubKeyRoot] = StakingContractStorageLib.OperatorIndex({
-                enabled: true,
-                operatorIndex: uint32(_operatorIndex)
-            });
+            operatorIndexPerValidator.value[pubKeyRoot] =
+                StakingContractStorageLib.OperatorIndex({enabled: true, operatorIndex: uint32(_operatorIndex)});
 
             unchecked {
                 ++i;
@@ -592,16 +577,16 @@ contract StakingContract {
             revert InvalidArgument();
         }
 
-        StakingContractStorageLib.ValidatorsFundingInfo memory operatorInfo = StakingContractStorageLib
-            .getValidatorsFundingInfo(_operatorIndex);
+        StakingContractStorageLib.ValidatorsFundingInfo memory operatorInfo =
+            StakingContractStorageLib.getValidatorsFundingInfo(_operatorIndex);
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
-        StakingContractStorageLib.OperatorIndexPerValidatorSlot
-            storage operatorIndexPerValidator = StakingContractStorageLib.getOperatorIndexPerValidator();
+        StakingContractStorageLib.OperatorIndexPerValidatorSlot storage operatorIndexPerValidator =
+            StakingContractStorageLib.getOperatorIndexPerValidator();
 
         if (_indexes[_indexes.length - 1] < operatorInfo.funded) {
             revert FundedValidatorDeletionAttempt();
         }
-        for (uint256 i; i < _indexes.length; ) {
+        for (uint256 i; i < _indexes.length;) {
             if (i > 0 && _indexes[i] >= _indexes[i - 1]) {
                 revert UnsortedIndexes();
             }
@@ -615,13 +600,11 @@ contract StakingContract {
                 operators.value[_operatorIndex].publicKeys.pop();
                 operators.value[_operatorIndex].signatures.pop();
             } else {
-                operators.value[_operatorIndex].publicKeys[_indexes[i]] = operators.value[_operatorIndex].publicKeys[
-                    operators.value[_operatorIndex].publicKeys.length - 1
-                ];
+                operators.value[_operatorIndex].publicKeys[_indexes[i]] =
+                    operators.value[_operatorIndex].publicKeys[operators.value[_operatorIndex].publicKeys.length - 1];
                 operators.value[_operatorIndex].publicKeys.pop();
-                operators.value[_operatorIndex].signatures[_indexes[i]] = operators.value[_operatorIndex].signatures[
-                    operators.value[_operatorIndex].signatures.length - 1
-                ];
+                operators.value[_operatorIndex].signatures[_indexes[i]] =
+                    operators.value[_operatorIndex].signatures[operators.value[_operatorIndex].signatures.length - 1];
                 operators.value[_operatorIndex].signatures.pop();
             }
 
@@ -647,7 +630,7 @@ contract StakingContract {
         if (_publicKeys.length % PUBLIC_KEY_LENGTH != 0) {
             revert InvalidPublicKeys();
         }
-        for (uint256 i = 0; i < _publicKeys.length; ) {
+        for (uint256 i = 0; i < _publicKeys.length;) {
             bytes memory publicKey = BytesLib.slice(_publicKeys, i, PUBLIC_KEY_LENGTH);
             _onlyWithdrawerOrAdmin(publicKey);
             _deployAndWithdraw(publicKey, EXECUTION_LAYER_SALT_PREFIX, StakingContractStorageLib.getELDispatcher());
@@ -665,7 +648,7 @@ contract StakingContract {
         if (_publicKeys.length % PUBLIC_KEY_LENGTH != 0) {
             revert InvalidPublicKeys();
         }
-        for (uint256 i = 0; i < _publicKeys.length; ) {
+        for (uint256 i = 0; i < _publicKeys.length;) {
             bytes memory publicKey = BytesLib.slice(_publicKeys, i, PUBLIC_KEY_LENGTH);
             _onlyWithdrawerOrAdmin(publicKey);
             _deployAndWithdraw(publicKey, CONSENSUS_LAYER_SALT_PREFIX, StakingContractStorageLib.getCLDispatcher());
@@ -682,7 +665,7 @@ contract StakingContract {
         if (_publicKeys.length % PUBLIC_KEY_LENGTH != 0) {
             revert InvalidPublicKeys();
         }
-        for (uint256 i = 0; i < _publicKeys.length; ) {
+        for (uint256 i = 0; i < _publicKeys.length;) {
             bytes memory publicKey = BytesLib.slice(_publicKeys, i, PUBLIC_KEY_LENGTH);
             _onlyWithdrawerOrAdmin(publicKey);
             _deployAndWithdraw(publicKey, EXECUTION_LAYER_SALT_PREFIX, StakingContractStorageLib.getELDispatcher());
@@ -722,7 +705,7 @@ contract StakingContract {
         if (_publicKeys.length % PUBLIC_KEY_LENGTH != 0) {
             revert InvalidPublicKeys();
         }
-        for (uint256 i = 0; i < _publicKeys.length; ) {
+        for (uint256 i = 0; i < _publicKeys.length;) {
             bytes memory publicKey = BytesLib.slice(_publicKeys, i, PUBLIC_KEY_LENGTH);
             bytes32 pubKeyRoot = _getPubKeyRoot(publicKey);
             address withdrawer = _getWithdrawer(pubKeyRoot);
@@ -751,17 +734,16 @@ contract StakingContract {
 
     function _onlyWithdrawerOrAdmin(bytes memory _publicKey) internal view {
         if (
-            msg.sender != _getWithdrawer(_getPubKeyRoot(_publicKey)) &&
-            StakingContractStorageLib.getAdmin() != msg.sender
+            msg.sender != _getWithdrawer(_getPubKeyRoot(_publicKey))
+                && StakingContractStorageLib.getAdmin() != msg.sender
         ) {
             revert InvalidWithdrawer();
         }
     }
 
     function _onlyActiveOperator(uint256 _operatorIndex) internal view {
-        StakingContractStorageLib.OperatorInfo storage operatorInfo = StakingContractStorageLib.getOperators().value[
-            _operatorIndex
-        ];
+        StakingContractStorageLib.OperatorInfo storage operatorInfo =
+            StakingContractStorageLib.getOperators().value[_operatorIndex];
 
         if (operatorInfo.deactivated) {
             revert Deactivated();
@@ -789,8 +771,8 @@ contract StakingContract {
     }
 
     function _updateAvailableValidatorCount(uint256 _operatorIndex) internal {
-        StakingContractStorageLib.ValidatorsFundingInfo memory validatorFundingInfo = StakingContractStorageLib
-            .getValidatorsFundingInfo(_operatorIndex);
+        StakingContractStorageLib.ValidatorsFundingInfo memory validatorFundingInfo =
+            StakingContractStorageLib.getValidatorsFundingInfo(_operatorIndex);
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
 
         uint32 oldAvailableCount = validatorFundingInfo.availableKeys;
@@ -802,9 +784,7 @@ contract StakingContract {
         } else {
             newAvailableCount = uint32(cap - validatorFundingInfo.funded);
             StakingContractStorageLib.setValidatorsFundingInfo(
-                _operatorIndex,
-                newAvailableCount,
-                validatorFundingInfo.funded
+                _operatorIndex, newAvailableCount, validatorFundingInfo.funded
             );
         }
 
@@ -827,11 +807,10 @@ contract StakingContract {
     function _depositValidatorsOfOperator(uint256 _operatorIndex, uint256 _validatorCount) internal {
         StakingContractStorageLib.OperatorsSlot storage operators = StakingContractStorageLib.getOperators();
         StakingContractStorageLib.OperatorInfo storage operator = operators.value[_operatorIndex];
-        StakingContractStorageLib.ValidatorsFundingInfo memory vfi = StakingContractStorageLib.getValidatorsFundingInfo(
-            _operatorIndex
-        );
+        StakingContractStorageLib.ValidatorsFundingInfo memory vfi =
+            StakingContractStorageLib.getValidatorsFundingInfo(_operatorIndex);
 
-        for (uint256 i = vfi.funded; i < vfi.funded + _validatorCount; ) {
+        for (uint256 i = vfi.funded; i < vfi.funded + _validatorCount;) {
             bytes memory publicKey = operator.publicKeys[i];
             bytes memory signature = operator.signatures[i];
             address consensusLayerRecipient = _getDeterministicReceiver(publicKey, CONSENSUS_LAYER_SALT_PREFIX);
@@ -846,9 +825,7 @@ contract StakingContract {
         }
 
         StakingContractStorageLib.setValidatorsFundingInfo(
-            _operatorIndex,
-            uint32(vfi.availableKeys - _validatorCount),
-            uint32(vfi.funded + _validatorCount)
+            _operatorIndex, uint32(vfi.availableKeys - _validatorCount), uint32(vfi.funded + _validatorCount)
         );
     }
 
@@ -879,10 +856,7 @@ contract StakingContract {
         uint256 targetBalance = address(this).balance - DEPOSIT_SIZE;
 
         IDepositContract(StakingContractStorageLib.getDepositContract()).deposit{value: DEPOSIT_SIZE}(
-            _publicKey,
-            abi.encodePacked(_withdrawalCredentials),
-            _signature,
-            depositDataRoot
+            _publicKey, abi.encodePacked(_withdrawalCredentials), _signature, depositDataRoot
         );
 
         if (address(this).balance != targetBalance) {
@@ -935,11 +909,7 @@ contract StakingContract {
     /// @param _publicKey Public Key assigned to the receiver
     /// @param _prefix Prefix used to generate multiple receivers per public key
     /// @param _dispatcher Address of the dispatcher contract
-    function _deployAndWithdraw(
-        bytes memory _publicKey,
-        uint256 _prefix,
-        address _dispatcher
-    ) internal {
+    function _deployAndWithdraw(bytes memory _publicKey, uint256 _prefix, address _dispatcher) internal {
         bytes32 publicKeyRoot = _getPubKeyRoot(_publicKey);
         bytes32 feeRecipientSalt = sha256(abi.encodePacked(_prefix, publicKeyRoot));
         address implementation = StakingContractStorageLib.getFeeRecipientImplementation();

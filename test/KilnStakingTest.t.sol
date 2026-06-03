@@ -26,8 +26,10 @@ contract KilnStakingTest is Test {
     address public feeRecipient = address(0x02);
     address public mockDepositContract = address(0x03);
 
-    bytes public mockPubKey = hex"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
-    bytes public mockSig = hex"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+    bytes public mockPubKey =
+        hex"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+    bytes public mockSig =
+        hex"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
 
     function setUp() public {
         staking = new StakingContract();
@@ -46,7 +48,7 @@ contract KilnStakingTest is Test {
             1000, // 10% global fee
             5000, // 50% operator fee (half of global fee)
             10000, // global commission limit BPS
-            10000  // operator commission limit BPS
+            10000 // operator commission limit BPS
         );
 
         clDispatcher.initCLD(address(staking));
@@ -62,7 +64,7 @@ contract KilnStakingTest is Test {
         assertEq(opIndex, 0);
 
         // Verify initial addresses
-        (address opAddr, address feeRec, , , , , ) = staking.getOperator(0);
+        (address opAddr, address feeRec,,,,,) = staking.getOperator(0);
         assertEq(opAddr, operator);
         assertEq(feeRec, feeRecipient);
 
@@ -72,7 +74,7 @@ contract KilnStakingTest is Test {
         staking.setOperatorAddresses(0, attacker, attacker);
 
         // 3. Verify operator has been changed (privilege escalated!)
-        (opAddr, feeRec, , , , , ) = staking.getOperator(0);
+        (opAddr, feeRec,,,,,) = staking.getOperator(0);
         assertEq(opAddr, attacker);
         assertEq(feeRec, attacker);
     }
@@ -82,7 +84,7 @@ contract KilnStakingTest is Test {
     function test_vulnerability2_3_swapped_errors_and_dos() public {
         // Setup reverting treasury contract
         RevertingContract badTreasury = new RevertingContract();
-        
+
         // Redeploy staking contract with reverting treasury
         StakingContract stakingWithBadTreasury = new StakingContract();
         vm.prank(admin);
@@ -105,20 +107,10 @@ contract KilnStakingTest is Test {
 
         // Set up dispatcher for this staking contract
         bytes32 pubKeyRoot = sha256(abi.encodePacked(mockPubKey, bytes16(0)));
+        vm.mockCall(address(stakingWithBadTreasury), abi.encodeWithSignature("getGlobalFee()"), abi.encode(1000));
+        vm.mockCall(address(stakingWithBadTreasury), abi.encodeWithSignature("getOperatorFee()"), abi.encode(5000));
         vm.mockCall(
-            address(stakingWithBadTreasury),
-            abi.encodeWithSignature("getGlobalFee()"),
-            abi.encode(1000)
-        );
-        vm.mockCall(
-            address(stakingWithBadTreasury),
-            abi.encodeWithSignature("getOperatorFee()"),
-            abi.encode(5000)
-        );
-        vm.mockCall(
-            address(stakingWithBadTreasury),
-            abi.encodeWithSignature("getTreasury()"),
-            abi.encode(address(badTreasury))
+            address(stakingWithBadTreasury), abi.encodeWithSignature("getTreasury()"), abi.encode(address(badTreasury))
         );
         vm.mockCall(
             address(stakingWithBadTreasury),
@@ -146,8 +138,7 @@ contract KilnStakingTest is Test {
         // it reverts with FeeRecipientReceiveError!
         vm.expectRevert(
             abi.encodeWithSelector(
-                ExecutionLayerFeeDispatcher.FeeRecipientReceiveError.selector,
-                expectedInnerRevertData
+                ExecutionLayerFeeDispatcher.FeeRecipientReceiveError.selector, expectedInnerRevertData
             )
         );
         elDispWithBadTreasury.dispatch(pubKeyRoot);

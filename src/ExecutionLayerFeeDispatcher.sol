@@ -61,9 +61,8 @@ contract ExecutionLayerFeeDispatcher is IFeeDispatcher {
         if (balance == 0) {
             revert ZeroBalanceWithdrawal();
         }
-        IStakingContractFeeDetails stakingContract = IStakingContractFeeDetails(
-            STAKING_CONTRACT_ADDRESS_SLOT.getAddress()
-        );
+        IStakingContractFeeDetails stakingContract =
+            IStakingContractFeeDetails(STAKING_CONTRACT_ADDRESS_SLOT.getAddress());
         address withdrawer = stakingContract.getWithdrawerFromPublicKeyRoot(_publicKeyRoot);
         address operator = stakingContract.getOperatorFeeRecipient(_publicKeyRoot);
         address treasury = stakingContract.getTreasury();
@@ -86,14 +85,7 @@ contract ExecutionLayerFeeDispatcher is IFeeDispatcher {
                 revert TreasuryReceiveError(data);
             }
         }
-        emit Withdrawal(
-            withdrawer,
-            operator,
-            _publicKeyRoot,
-            balance - globalFee,
-            operatorFee,
-            globalFee - operatorFee
-        );
+        emit Withdrawal(withdrawer, operator, _publicKeyRoot, balance - globalFee, operatorFee, globalFee - operatorFee);
     }
 
     /// @notice Retrieve the staking contract address
@@ -104,9 +96,8 @@ contract ExecutionLayerFeeDispatcher is IFeeDispatcher {
     /// @notice Retrieve the assigned withdrawer for the given public key root
     /// @param _publicKeyRoot Public key root to get the owner
     function getWithdrawer(bytes32 _publicKeyRoot) external view returns (address) {
-        IStakingContractFeeDetails stakingContract = IStakingContractFeeDetails(
-            STAKING_CONTRACT_ADDRESS_SLOT.getAddress()
-        );
+        IStakingContractFeeDetails stakingContract =
+            IStakingContractFeeDetails(STAKING_CONTRACT_ADDRESS_SLOT.getAddress());
         return stakingContract.getWithdrawerFromPublicKeyRoot(_publicKeyRoot);
     }
 
